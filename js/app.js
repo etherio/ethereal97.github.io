@@ -2,6 +2,7 @@ import Github from './src/Github.js';
 
 let github = new Github({
   user: 'ethereal97'
+  //user: 'laravel'
 });
 
 github.repositories.then(repos => {
@@ -77,14 +78,21 @@ function convertSize(value, unit, units) {
     unit = units[i];
     var unit_size = _units[unit];
     var unit_value = unit_size[2];
+    var repo_size;
     
-    if (current_value > unit_value) {
-      size.push([size_in_bytes * unit_value, unit_size[1]]);
-    } else {
-      size.push([size_in_bytes / unit_value, unit_size[1]]);
+    if (size_in_bytes > unit_size[2]) {
+      if (current_value > unit_value) {
+        repo_size = size_in_bytes * unit_value;
+      } else {
+        repo_size = size_in_bytes / unit_value;
+      }
+      size.push([repo_size.toFixed(2), unit_size[1]]);
     }
   }
-  size.sort((a, b) => b[0] - a[0]);
-  size = size[0];
-  return size.join(' ');
+  
+  if (size.length < 1) {
+    return (size_in_bytes / _units[units[0]][2]).toFixed(2) + ' ' + _units[units[0]][1];
+  }
+  
+  return size.pop().join(' ');
 }
