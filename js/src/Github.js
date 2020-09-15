@@ -34,12 +34,25 @@ export default class Github {
     this.repo = repo;
   }
   
+  getBranch(repo_name, branch_name) {
+    if (!this.user) throw new Error('Undefined property "user", make sure to "setUser" before');
+    var self = this;
+    var setBranch = function (branch) {
+      return fetchApi('repos', self.user, repo_name, 'branches', branch.name)
+        .then(branch => {
+          return fetch(branch.commit.commit.tree.url).then(res => res.json());
+        });
+    };
+    
+    return fetchApi('repos', this.user, repo_name, 'branches').then(branches => {
+      return setBranch(branches[0]);
+    });
+  }
+  
   // getter for all repositories
   get repositories() {
     if (!this.user) throw new Error('Undefined property "user", make sure to "setUser" before');
    
     return fetchApi('users', this.user, 'repos');
   }
-  
-  
 }

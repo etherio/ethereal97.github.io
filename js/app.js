@@ -9,10 +9,10 @@ github.repositories.then(repos => {
   if (!el) return;
   
   //console.log(Object.keys(repos[0]));
-  
+  let id = 0;
   repos.forEach(repo => {
-    let { id, html_url, name, size, language } = repo;
-    
+    let { html_url, name, size, language } = repo;
+    id++;
     var tr = document.createElement('tr');        
     var _id = document.createElement('td');        
     var _name = document.createElement('td');
@@ -26,6 +26,14 @@ github.repositories.then(repos => {
     a.target = '_blank';
     a.href = html_url;
     a.innerText = name;
+    
+    a.addEventListener('click', function (event) {
+      github.getBranch(name).then(res => {
+        console.log(res)
+      })
+      
+      return event.preventDefault();
+    });
     
     _name.appendChild(a);
     
