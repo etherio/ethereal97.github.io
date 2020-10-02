@@ -1,7 +1,7 @@
 import Github from './src/Github.js';
 
 let github = new Github({
-  user: 'ethereal97'
+  user: 'etherio'
 });
 
 github.repositories.then(repos => {
