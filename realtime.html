@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Realtime Analytics | Ethereal</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/milligram@1.4.1/dist/milligram.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.0/firebase-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.2/src/ua-parser.js"></script>
+    <style>
+      .grid {
+        display: grid;
+        gap: 5px;
+      }
+
+      .grid-cols-5 {
+        grid-column: repeat(5, 1fr);
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="container">
+      <h2>Clients</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Request Path</th>
+            <th>Screen Size</th>
+            <th>Platform</th>
+            <th>Browser</th>
+            <th>Created At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="client in clients">
+            <td><code>{{client.currentUrl}}</code></td>
+            <td>{{client.screenHeight}}x{{client.screenWidth}}</td>
+            <td>
+              {{getOS(client.userAgent).name}}
+              {{getOS(client.userAgent).version}}
+            </td>
+            <td>{{getBrowser(client.userAgent).name}}</td>
+            <td>{{getDate(client.createdAt)}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
+
+    <script>
+      let _t;
+      const parser = new UAParser();
+
+      new Vue({
+        data: {
+          clients$: [],
+        },
+        methods: {
+          getDate(timestamp) {
+            return moment(timestamp).from();
+          },
+          getBrowser(userAgent) {
+            parser.setUA(userAgent);
+            return parser.getResult().browser;
+          },
+          getOS(userAgent) {
+            parser.setUA(userAgent);
+            return parser.getOS();
+          },
+          refresh() {
+            let clients = this.clients$;
+            this.clients$ = [];
+            requestAnimationFrame(() => (this.clients$ = clients));
+          },
+        },
+        computed: {
+          clients() {
+            return this.clients$.sort((a, b) => b.createdAt - a.createdAt);
+          },
+        },
+        beforeMount() {
+          const firebaseConfig = {
+            apiKey: "AIzaSyCs9A8y7U-iCfMd4MAQdCU9UrKMqczkfrs",
+            authDomain: "workflows-test-13c0a.firebaseapp.com",
+            databaseURL:
+              "https://workflows-test-13c0a-default-rtdb.firebaseio.com",
+            projectId: "workflows-test-13c0a",
+            storageBucket: "workflows-test-13c0a.appspot.com",
+            messagingSenderId: "34553799520",
+            appId: "1:34553799520:web:019b8f7ef6e9c02405b405",
+            measurementId: "G-LDLNR4NN8J",
+          };
+
+          firebase.initializeApp(firebaseConfig);
+
+          firebase
+            .database()
+            .ref("analytics")
+            .on("child_added", (snapshot) => {
+              const key = snapshot.key;
+              const value = snapshot.val();
+              this.clients$.unshift(
+                ...Object.values(value).map((v) => ({
+                  ...v,
+                  ip: key.split("_").join("."),
+                }))
+              );
+            });
+
+          //   _t = setInterval(() => this.refresh(), 5000);
+        },
+      }).$mount("main");
+    </script>
+  </body>
+</html>
